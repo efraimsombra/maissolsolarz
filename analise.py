@@ -82,7 +82,21 @@ fig_boxplot.update_layout(
     )
 st.plotly_chart(fig_boxplot, key='power_boxplot')
 
-col1, col2 = st.columns(2)
+# Display overall statistics
+total_usinas_global = df.shape[0]
+usinas_online_global = df[df['Status Operacional'] == 'Online'].shape[0]
+usinas_offline_global = df[df['Status Operacional'] == 'Offline'].shape[0]
+
+st.subheader("Visão Geral das Usinas")
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric(label="Nº Usinas Total", value=total_usinas_global)
+with col2:
+    st.metric(label="Nº Usinas Online", value=usinas_online_global)
+with col3:
+    st.metric(label="Nº Usinas Off-line", value=usinas_offline_global)
+
+col4, col5 = st.columns(2)
 
 # Gerar e exibir gráfico de pizza para Status Operacional
 if not filtered_df.empty:
@@ -96,7 +110,7 @@ if not filtered_df.empty:
         hole=0.5,
         color_discrete_sequence=px.colors.sequential.Blugrn_r
     )
-    col1.plotly_chart(fig_operational)
+    col5.plotly_chart(fig_operational)
 
 # Gerar e exibir gráfico de pizza para Status da Garantia
 warranty_counts = filtered_df['Status da Garantia'].value_counts().reset_index()
@@ -109,9 +123,9 @@ fig_warranty = px.pie(
     hole=0.5,
     color_discrete_sequence=px.colors.sequential.Blugrn_r
     )
-col2.plotly_chart(fig_warranty)
+col5.plotly_chart(fig_warranty)
 
-col3, col4 = st.columns(2)
+col6, col7 = st.columns(2)
 
     # Recalculate generation ranges for filtered data
     # Daily Generation
@@ -149,7 +163,7 @@ fig_daily = px.bar(
         title='Quantidade de Usinas por Faixa de Geração (Diária)',
         color_discrete_sequence=px.colors.sequential.Blugrn_r
     )
-col3.plotly_chart(fig_daily)
+col6.plotly_chart(fig_daily)
 
     # Fortnightly Generation
 semana_mais_que_90 = filtered_df[filtered_df['Geração % quinzenal'] > 90].shape[0]
@@ -186,7 +200,7 @@ fig_fortnightly = px.bar(
             title='Quantidade de Usinas por Faixa de Geração (Quinzenal)',
             color_discrete_sequence=px.colors.sequential.Blugrn_r
         )
-col4.plotly_chart(fig_fortnightly)
+col7.plotly_chart(fig_fortnightly)
 
     # Monthly Generation
 mensal_mais_que_90 = filtered_df[filtered_df['Geração % mensal'] > 90].shape[0]
@@ -216,7 +230,7 @@ data_monthly = {
     }
 mes_power_df = pd.DataFrame(data_monthly)
 
-col5, col6 = st.columns(2)
+col8, col9 = st.columns(2)
     
 fig_monthly = px.bar(
         mes_power_df,
@@ -225,7 +239,7 @@ fig_monthly = px.bar(
         title='Quantidade de Usinas por Faixa de Geração (Mensal)',
         color_discrete_sequence=px.colors.sequential.Blugrn_r
         )
-col5.plotly_chart(fig_monthly)
+col8.plotly_chart(fig_monthly)
 
     # Annual Generation
 anual_mais_que_90 = filtered_df[filtered_df['Geração % anual'] > 90].shape[0]
@@ -262,11 +276,12 @@ fig_annual = px.bar(
             title='Quantidade de Usinas por Faixa de Geração (Anual)',
             color_discrete_sequence=px.colors.sequential.Blugrn_r
         )
-col6.plotly_chart(fig_annual)
+col9.plotly_chart(fig_annual)
 
 # Exibir os dados filtrados
 
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
