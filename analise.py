@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # --- Configuração da Página ---
 # Define o título da página, o ícone e o layout para ocupar a largura inteira.
 st.set_page_config(
-    page_title="Dashboard de Monitoramento das Usinas SolarZ",
+    page_title="Dashboard: Monitoramento das Usinas SolarZ",
     page_icon="📊",
     layout="wide",
 )
@@ -283,6 +283,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
