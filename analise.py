@@ -66,7 +66,7 @@ if selected_operational_status != 'Todos':
 filtered_df = filtered_df.reset_index(drop=True)
 
 # --- Conteúdo Principal ---
-st.title("📊 Dashboard de Monitoramento das Usinas SolarZ")
+st.title("📊 Dashboard: Monitoramento das Usinas SolarZ")
 st.markdown("Explore os dados de análise do desempenho e eficiência das usinas que estão dentro e fora da garantia. Utilize os filtros à esquerda para refinar sua análise.")
 
 # Plotly Box Plot for 'Potência do Sistema'
@@ -283,6 +283,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
