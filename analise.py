@@ -110,7 +110,7 @@ if not filtered_df.empty:
         hole=0.5,
         color_discrete_sequence=px.colors.sequential.Blugrn_r
     )
-    col5.plotly_chart(fig_operational)
+    col4.plotly_chart(fig_operational)
 
 # Gerar e exibir gráfico de pizza para Status da Garantia
 warranty_counts = filtered_df['Status da Garantia'].value_counts().reset_index()
@@ -283,5 +283,6 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
