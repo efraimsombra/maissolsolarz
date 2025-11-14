@@ -15,7 +15,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     df = pd.read_csv("DSZ.csv")
-    
+
     # Convert 'Potência do Sistema' to numeric, handling errors
     df['Potência do Sistema'] = pd.to_numeric(df['Potência do Sistema'], errors='coerce')
 
@@ -80,7 +80,7 @@ def apply_generation_range_filter(df_to_filter, generation_col, faixa_geracao):
     elif faixa_geracao == '< 45%':
         return df_filtered[df_filtered[generation_col] < 45]
     return df_filtered # Fallback, though one of the above should be hit if faixa_geracao is valid
-    
+
 # --- Barra Lateral (Filtros) ---
 st.sidebar.header("🔍 Filtros")
 
@@ -116,40 +116,14 @@ selected_operational_status = st.sidebar.selectbox(
     key='operational_filter'
 )
 
-
-# Aplicar os filtros
+# Aplicar os filtros base (Garantia e Operacional) ao DataFrame principal
 filtered_df = df.copy()
-
-
 
 if selected_warranty_status != 'Todos':
     filtered_df = filtered_df[filtered_df['Status da Garantia'] == selected_warranty_status]
 
 if selected_operational_status != 'Todos':
     filtered_df = filtered_df[filtered_df['Status Operacional'] == selected_operational_status]
-
-# Aplicar filtro por Período de Geração
-if selected_periodo_geracao != 'Todos':
-    # Assuming 'Período de Geração' is the column name in df
-    if 'Período de Geração' in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['Período de Geração'] == selected_periodo_geracao]
-
-# Aplicar filtro por Faixa de Geração
-if selected_faixa_geracao != 'Todos':
-    # Assuming 'Geração Percentual' is the column name in df and is numeric
-    if 'Geração Percentual' in filtered_df.columns:
-        if selected_faixa_geracao == '> 90%':
-            filtered_df = filtered_df[filtered_df['Geração Percentual'] > 90]
-        elif selected_faixa_geracao == '80% < x <= 90%':
-            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 80) & (filtered_df['Geração Percentual'] <= 90)]
-        elif selected_faixa_geracao == '70% < x <= 80%':
-            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 70) & (filtered_df['Geração Percentual'] <= 80)]
-        elif selected_faixa_geracao == '60% < x <= 70%':
-            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 60) & (filtered_df['Geração Percentual'] <= 70)]
-        elif selected_faixa_geracao == '50% < x <= 60%':
-            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 50) & (filtered_df['Geração Percentual'] <= 60)]
-        elif selected_faixa_geracao == '< 45%':
-            filtered_df = filtered_df[filtered_df['Geração Percentual'] < 45]
 
 # Reset index to avoid potential indexing issues in subsequent operations
 filtered_df = filtered_df.reset_index(drop=True)
@@ -159,7 +133,7 @@ st.title("📊 Dashboard: Monitoramento das Usinas SolarZ")
 st.markdown("Explore os dados de análise do desempenho e eficiência das usinas que estão dentro e fora da garantia. Utilize os filtros à esquerda para refinar sua análise.")
 
 # Plotly Box Plot for 'Potência do Sistema'
-# Plotly Box Plot for 'Potência do Sistema'
+# This plot uses the 'filtered_df' (filtered by warranty and operational status only)
 fig_boxplot = px.box(
         filtered_df.dropna(subset=['Potência do Sistema']),
         x='Potência do Sistema',
@@ -188,6 +162,7 @@ with col3:
 col4, col5 = st.columns(2)
 
 # Gerar e exibir gráfico de pizza para Status Operacional
+# This plot uses the 'filtered_df' (filtered by warranty and operational status only)
 if not filtered_df.empty:
     operational_counts = filtered_df['Status Operacional'].value_counts().reset_index()
     operational_counts.columns = ['Status', 'Quantidade']
@@ -202,6 +177,7 @@ if not filtered_df.empty:
     col4.plotly_chart(fig_operational)
 
 # Gerar e exibir gráfico de pizza para Status da Garantia
+# This plot uses the 'filtered_df' (filtered by warranty and operational status only)
 warranty_counts = filtered_df['Status da Garantia'].value_counts().reset_index()
 warranty_counts.columns = ['Status', 'Quantidade']
 fig_warranty = px.pie(
@@ -216,14 +192,18 @@ col5.plotly_chart(fig_warranty)
 
 col6, col7 = st.columns(2)
 
-    # Recalculate generation ranges for filtered data
-    # Daily Generation
-mais_que_90 = filtered_df[filtered_df['Geração % diária'] > 90].shape[0]
-mais_que_80_menos_que_90 = filtered_df[(filtered_df['Geração % diária'] > 80) & (filtered_df['Geração % diária'] <= 90)].shape[0]
-mais_que_70_menos_que_80 = filtered_df[(filtered_df['Geração % diária'] > 70) & (filtered_df['Geração % diária'] <= 80)].shape[0]
-mais_que_60_menos_que_70 = filtered_df[(filtered_df['Geração % diária'] > 60) & (filtered_df['Geração % diária'] <= 70)].shape[0]
-mais_que_50_menos_que_60 = filtered_df[(filtered_df['Geração % diária'] > 50) & (filtered_df['Geração % diária'] <= 60)].shape[0]
-menos_que_45 = filtered_df[filtered_df['Geração % diária'] < 45].shape[0]
+# --- Daily Generation Chart ---
+df_for_daily_chart = filtered_df.copy()
+# Apply faixa_geracao filter if 'Diário' is selected or 'Todos' is selected for periodo_geracao
+if selected_periodo_geracao == 'Diário' or selected_periodo_geracao == 'Todos':
+    df_for_daily_chart = apply_generation_range_filter(df_for_daily_chart, 'Geração % diária', selected_faixa_geracao)
+
+mais_que_90 = df_for_daily_chart[df_for_daily_chart['Geração % diária'] > 90].shape[0]
+mais_que_80_menos_que_90 = df_for_daily_chart[(df_for_daily_chart['Geração % diária'] > 80) & (df_for_daily_chart['Geração % diária'] <= 90)].shape[0]
+mais_que_70_menos_que_80 = df_for_daily_chart[(df_for_daily_chart['Geração % diária'] > 70) & (df_for_daily_chart['Geração % diária'] <= 80)].shape[0]
+mais_que_60_menos_que_70 = df_for_daily_chart[(df_for_daily_chart['Geração % diária'] > 60) & (df_for_daily_chart['Geração % diária'] <= 70)].shape[0]
+mais_que_50_menos_que_60 = df_for_daily_chart[(df_for_daily_chart['Geração % diária'] > 50) & (df_for_daily_chart['Geração % diária'] <= 60)].shape[0]
+menos_que_45 = df_for_daily_chart[df_for_daily_chart['Geração % diária'] < 45].shape[0]
 
 data_daily = {
         'Faixa de Geração Diária': [
@@ -254,13 +234,18 @@ fig_daily = px.bar(
     )
 col6.plotly_chart(fig_daily)
 
-    # Fortnightly Generation
-semana_mais_que_90 = filtered_df[filtered_df['Geração % quinzenal'] > 90].shape[0]
-semana_mais_que_80_menos_que_90 = filtered_df[(filtered_df['Geração % quinzenal'] > 80) & (filtered_df['Geração % quinzenal'] <= 90)].shape[0]
-semana_mais_que_70_menos_que_80 = filtered_df[(filtered_df['Geração % quinzenal'] > 70) & (filtered_df['Geração % quinzenal'] <= 80)].shape[0]
-semana_mais_que_60_menos_que_70 = filtered_df[(filtered_df['Geração % quinzenal'] > 60) & (filtered_df['Geração % quinzenal'] <= 70)].shape[0]
-semana_mais_que_50_menos_que_60 = filtered_df[(filtered_df['Geração % quinzenal'] > 50) & (filtered_df['Geração % quinzenal'] <= 60)].shape[0]
-semana_menos_que_45 = filtered_df[filtered_df['Geração % quinzenal'] < 45].shape[0]
+# --- Fortnightly Generation Chart ---
+df_for_fortnightly_chart = filtered_df.copy()
+# Apply faixa_geracao filter if 'Quinzenal' is selected or 'Todos' is selected for periodo_geracao
+if selected_periodo_geracao == 'Quinzenal' or selected_periodo_geracao == 'Todos':
+    df_for_fortnightly_chart = apply_generation_range_filter(df_for_fortnightly_chart, 'Geração % quinzenal', selected_faixa_geracao)
+
+semana_mais_que_90 = df_for_fortnightly_chart[df_for_fortnightly_chart['Geração % quinzenal'] > 90].shape[0]
+semana_mais_que_80_menos_que_90 = df_for_fortnightly_chart[(df_for_fortnightly_chart['Geração % quinzenal'] > 80) & (df_for_fortnightly_chart['Geração % quinzenal'] <= 90)].shape[0]
+semana_mais_que_70_menos_que_80 = df_for_fortnightly_chart[(df_for_fortnightly_chart['Geração % quinzenal'] > 70) & (df_for_fortnightly_chart['Geração % quinzenal'] <= 80)].shape[0]
+semana_mais_que_60_menos_que_70 = df_for_fortnightly_chart[(df_for_fortnightly_chart['Geração % quinzenal'] > 60) & (df_for_fortnightly_chart['Geração % quinzenal'] <= 70)].shape[0]
+semana_mais_que_50_menos_que_60 = df_for_fortnightly_chart[(df_for_fortnightly_chart['Geração % quinzenal'] > 50) & (df_for_fortnightly_chart['Geração % quinzenal'] <= 60)].shape[0]
+semana_menos_que_45 = df_for_fortnightly_chart[df_for_fortnightly_chart['Geração % quinzenal'] < 45].shape[0]
 
 data_fortnightly = {
         'Faixa de Geração Quinzenal': [
@@ -291,13 +276,18 @@ fig_fortnightly = px.bar(
         )
 col7.plotly_chart(fig_fortnightly)
 
-    # Monthly Generation
-mensal_mais_que_90 = filtered_df[filtered_df['Geração % mensal'] > 90].shape[0]
-mensal_mais_que_80_menos_que_90 = filtered_df[(filtered_df['Geração % mensal'] > 80) & (filtered_df['Geração % mensal'] <= 90)].shape[0]
-mensal_mais_que_70_menos_que_80 = filtered_df[(filtered_df['Geração % mensal'] > 70) & (filtered_df['Geração % mensal'] <= 80)].shape[0]
-mensal_mais_que_60_menos_que_70 = filtered_df[(filtered_df['Geração % mensal'] > 60) & (filtered_df['Geração % mensal'] <= 70)].shape[0]
-mensal_mais_que_50_menos_que_60 = filtered_df[(filtered_df['Geração % mensal'] > 50) & (filtered_df['Geração % mensal'] <= 60)].shape[0]
-mensal_menos_que_45 = filtered_df[filtered_df['Geração % mensal'] < 45].shape[0]
+# --- Monthly Generation Chart ---
+df_for_monthly_chart = filtered_df.copy()
+# Apply faixa_geracao filter if 'Mensal' is selected or 'Todos' is selected for periodo_geracao
+if selected_periodo_geracao == 'Mensal' or selected_periodo_geracao == 'Todos':
+    df_for_monthly_chart = apply_generation_range_filter(df_for_monthly_chart, 'Geração % mensal', selected_faixa_geracao)
+
+mensal_mais_que_90 = df_for_monthly_chart[df_for_monthly_chart['Geração % mensal'] > 90].shape[0]
+mensal_mais_que_80_menos_que_90 = df_for_monthly_chart[(df_for_monthly_chart['Geração % mensal'] > 80) & (df_for_monthly_chart['Geração % mensal'] <= 90)].shape[0]
+mensal_mais_que_70_menos_que_80 = df_for_monthly_chart[(df_for_monthly_chart['Geração % mensal'] > 70) & (df_for_monthly_chart['Geração % mensal'] <= 80)].shape[0]
+mensal_mais_que_60_menos_que_70 = df_for_monthly_chart[(df_for_monthly_chart['Geração % mensal'] > 60) & (df_for_monthly_chart['Geração % mensal'] <= 70)].shape[0]
+mensal_mais_que_50_menos_que_60 = df_for_monthly_chart[(df_for_monthly_chart['Geração % mensal'] > 50) & (df_for_monthly_chart['Geração % mensal'] <= 60)].shape[0]
+mensal_menos_que_45 = df_for_monthly_chart[df_for_monthly_chart['Geração % mensal'] < 45].shape[0]
 
 data_monthly = {
         'Faixa de Geração Mensal': [
@@ -320,7 +310,7 @@ data_monthly = {
 mes_power_df = pd.DataFrame(data_monthly)
 
 col8, col9 = st.columns(2)
-    
+
 fig_monthly = px.bar(
         mes_power_df,
         x='Faixa de Geração Mensal',
@@ -330,13 +320,18 @@ fig_monthly = px.bar(
         )
 col8.plotly_chart(fig_monthly)
 
-    # Annual Generation
-anual_mais_que_90 = filtered_df[filtered_df['Geração % anual'] > 90].shape[0]
-anual_mais_que_80_menos_que_90 = filtered_df[(filtered_df['Geração % anual'] > 80) & (filtered_df['Geração % anual'] <= 90)].shape[0]
-anual_mais_que_70_menos_que_80 = filtered_df[(filtered_df['Geração % anual'] > 70) & (filtered_df['Geração % anual'] <= 80)].shape[0]
-anual_mais_que_60_menos_que_70 = filtered_df[(filtered_df['Geração % anual'] > 60) & (filtered_df['Geração % anual'] <= 70)].shape[0]
-anual_mais_que_50_menos_que_60 = filtered_df[(filtered_df['Geração % anual'] > 50) & (filtered_df['Geração % anual'] <= 60)].shape[0]
-anual_menos_que_45 = filtered_df[filtered_df['Geração % anual'] < 45].shape[0]
+# --- Annual Generation Chart ---
+df_for_annual_chart = filtered_df.copy()
+# Apply faixa_geracao filter if 'Anual' is selected or 'Todos' is selected for periodo_geracao
+if selected_periodo_geracao == 'Anual' or selected_periodo_geracao == 'Todos':
+    df_for_annual_chart = apply_generation_range_filter(df_for_annual_chart, 'Geração % anual', selected_faixa_geracao)
+
+anual_mais_que_90 = df_for_annual_chart[df_for_annual_chart['Geração % anual'] > 90].shape[0]
+anual_mais_que_80_menos_que_90 = df_for_annual_chart[(df_for_annual_chart['Geração % anual'] > 80) & (df_for_annual_chart['Geração % anual'] <= 90)].shape[0]
+anual_mais_que_70_menos_que_80 = df_for_annual_chart[(df_for_annual_chart['Geração % anual'] > 70) & (df_for_annual_chart['Geração % anual'] <= 80)].shape[0]
+anual_mais_que_60_menos_que_70 = df_for_annual_chart[(df_for_annual_chart['Geração % anual'] > 60) & (df_for_annual_chart['Geração % anual'] <= 70)].shape[0]
+anual_mais_que_50_menos_que_60 = df_for_annual_chart[(df_for_annual_chart['Geração % anual'] > 50) & (df_for_annual_chart['Geração % anual'] <= 60)].shape[0]
+anual_menos_que_45 = df_for_annual_chart[df_for_annual_chart['Geração % anual'] < 45].shape[0]
 
 data_annual = {
         'Faixa de Geração Anual': [
@@ -357,7 +352,7 @@ data_annual = {
         ]
     }
 ano_power_df = pd.DataFrame(data_annual)
-    
+
 fig_annual = px.bar(
             ano_power_df,
             x='Faixa de Geração Anual',
@@ -367,11 +362,10 @@ fig_annual = px.bar(
         )
 col9.plotly_chart(fig_annual)
 
-# Exibir os dados filtrados
-
+# Exibir os dados filtrados (This table reflects only warranty and operational filters)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
-st.dataframe(filtered_df)    
+st.dataframe(filtered_df)
 
 
 
