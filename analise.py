@@ -54,7 +54,7 @@ selected_operational_status = st.sidebar.selectbox(
 )
 
 # Apply new generation filters
-if selected_periodo_geracao != 'Todos' and selected_faixa_geracao != 'Todos':
+generation_options = ['Todos'] + list(df['Status Operacional'].unique())
     generation_col_map = {
         'Diário': 'Geração % diária',
         'Quinzenal': 'Geração % quinzenal',
@@ -293,6 +293,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
