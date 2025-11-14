@@ -33,7 +33,53 @@ def load_data():
 
 df = load_data()
 
+# --- Helper function for applying generation range filter ---
+def apply_generation_range_filter(df_to_filter, generation_col, faixa_geracao):
+    if faixa_geracao == 'Todos':
+        return df_to_filter.copy() # Return a copy to ensure immutability
 
+    if generation_col not in df_to_filter.columns:
+        st.warning(f"Coluna '{generation_col}' não encontrada para o filtro de Faixa de Geração. Retornando DataFrame original.")
+        return df_to_filter.copy() # Return a copy to avoid modifying original df unintentionally later
+
+    df_filtered = df_to_filter.copy()
+
+    # Make sure the column is clean before converting to numeric
+    # Check if the column is of object type (string) and contains '%' or ','
+    if pd.api.types.is_object_dtype(df_filtered[generation_col]):
+        try:
+            # Attempt to remove '%' and replace ',' with '.' for decimal conversion, then convert to numeric
+            df_filtered[generation_col] = df_filtered[generation_col].astype(str).str.replace('%', '', regex=False).str.replace(',', '.', regex=False)
+        except AttributeError: # In case it's not string-like, e.g., already numeric but object type
+            pass # Keep it as is if not string-like, pd.to_numeric will handle it
+
+    # Convert to numeric, coercing errors to NaN
+    df_filtered[generation_col] = pd.to_numeric(df_filtered[generation_col], errors='coerce')
+
+    original_rows_before_dropna = df_filtered.shape[0]
+    # Drop rows where conversion failed (i.e., NaN values in the generation column)
+    df_filtered.dropna(subset=[generation_col], inplace=True)
+    if df_filtered.shape[0] < original_rows_before_dropna:
+        st.info(f"O filtro de Faixa de Geração para '{generation_col}' removeu {original_rows_before_dropna - df_filtered.shape[0]} linhas devido a valores não numéricos ou ausentes.")
+
+    if df_filtered.empty:
+        st.warning(f"Após o tratamento de dados, o DataFrame para '{generation_col}' está vazio. Não foi possível aplicar o filtro de Faixa de Geração.")
+        return pd.DataFrame(columns=df_to_filter.columns) # Return empty DataFrame with original columns
+
+    # Apply the actual percentage filter
+    if faixa_geracao == '> 90%':
+        return df_filtered[df_filtered[generation_col] > 90]
+    elif faixa_geracao == '80% < x <= 90%':
+        return df_filtered[(df_filtered[generation_col] > 80) & (df_filtered[generation_col] <= 90)]
+    elif faixa_geracao == '70% < x <= 80%':
+        return df_filtered[(df_filtered[generation_col] > 70) & (df_filtered[generation_col] <= 80)]
+    elif faixa_geracao == '60% < x <= 70%':
+        return df_filtered[(df_filtered[generation_col] > 60) & (df_filtered[generation_col] <= 70)]
+    elif faixa_geracao == '50% < x <= 60%':
+        return df_filtered[(df_filtered[generation_col] > 50) & (df_filtered[generation_col] <= 60)]
+    elif faixa_geracao == '< 45%':
+        return df_filtered[df_filtered[generation_col] < 45]
+    return df_filtered # Fallback, though one of the above should be hit if faixa_geracao is valid
 
 # --- Barra Lateral (Filtros) ---
 st.sidebar.header("🔍 Filtros")
@@ -325,6 +371,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
