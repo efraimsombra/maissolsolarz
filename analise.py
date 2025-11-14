@@ -115,8 +115,7 @@ selected_operational_status = st.sidebar.selectbox(
     operational_options,
     key='operational_filter'
 )
-# Reset index to avoid potential indexing issues in subsequent operations
-filtered_df = filtered_df.reset_index(drop=True)
+
 
 # Aplicar os filtros
 filtered_df = df.copy()
@@ -373,6 +372,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
