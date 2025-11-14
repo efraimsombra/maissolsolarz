@@ -86,34 +86,6 @@ if selected_warranty_status != 'Todos':
 if selected_operational_status != 'Todos':
     filtered_df = filtered_df[filtered_df['Status Operacional'] == selected_operational_status]
 
-# Apply new generation filters
-if selected_periodo_geracao != 'Todos' and selected_faixa_geracao != 'Todos':
-    generation_col_map = {
-        'Diário'== 'Geração % diária',
-        'Quinzenal'== 'Geração % quinzenal',
-        'Mensal'== 'Geração % mensal',
-        'Anual'== 'Geração % anual'
-    }
-    col_name = generation_col_map.get(selected_periodo_geracao)
-
-if col_name and col_name in filtered_df.columns:
-        # Drop NaNs for the selected generation column to avoid errors in comparison
-        filtered_df = filtered_df.dropna(subset=[col_name])
-
-    if selected_faixa_geracao == '> 90%':
-            filtered_df = filtered_df[filtered_df[col_name] > 90]
-    elif selected_faixa_geracao == '80% < x <= 90%':
-            filtered_df = filtered_df[(filtered_df[col_name] > 80) & (filtered_df[col_name] <= 90)]
-    elif selected_faixa_geracao == '70% < x <= 80%':
-            filtered_df = filtered_df[(filtered_df[col_name] > 70) & (filtered_df[col_name] <= 80)]
-    elif selected_faixa_geracao == '60% < x <= 70%':
-            filtered_df = filtered_df[(filtered_df[col_name] > 60) & (filtered_df[col_name] <= 70)]
-    elif selected_faixa_geracao == '50% < x <= 60%':
-            filtered_df = filtered_df[(filtered_df[col_name] > 50) & (filtered_df[col_name] <= 60)]
-    elif selected_faixa_geracao == '< 45%':
-            filtered_df = filtered_df[filtered_df[col_name] < 45]
-
-
 # Reset index to avoid potential indexing issues in subsequent operations
 filtered_df = filtered_df.reset_index(drop=True)
 
@@ -335,6 +307,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
