@@ -128,12 +128,29 @@ if selected_operational_status != 'Todos':
 # Reset index to avoid potential indexing issues in subsequent operations
 filtered_df = filtered_df.reset_index(drop=True)
 
+# Apply the specific generation range filter to the main filtered_df if a specific period is selected
+if selected_periodo_geracao != 'Todos' and selected_faixa_geracao != 'Todos':
+    generation_col_map = {
+        'Diário': 'Geração % diária',
+        'Quinzenal': 'Geração % quinzenal',
+        'Mensal': 'Geração % mensal',
+        'Anual': 'Geração % anual'
+    }
+    target_generation_col = generation_col_map.get(selected_periodo_geracao)
+
+    if target_generation_col:
+        # Apply the generation range filter to the main filtered_df
+        filtered_df = apply_generation_range_filter(filtered_df, target_generation_col, selected_faixa_geracao)
+
+# Reset index again after applying generation filter, if any
+filtered_df = filtered_df.reset_index(drop=True)
+
 # --- Conteúdo Principal ---
 st.title("📊 Dashboard: Monitoramento das Usinas SolarZ")
 st.markdown("Explore os dados de análise do desempenho e eficiência das usinas que estão dentro e fora da garantia. Utilize os filtros à esquerda para refinar sua análise.")
 
 # Plotly Box Plot for 'Potência do Sistema'
-# This plot uses the 'filtered_df' (filtered by warranty and operational status only)
+# This plot uses the 'filtered_df' which now includes all applied filters
 fig_boxplot = px.box(
         filtered_df.dropna(subset=['Potência do Sistema']),
         x='Potência do Sistema',
@@ -162,7 +179,7 @@ with col3:
 col4, col5 = st.columns(2)
 
 # Gerar e exibir gráfico de pizza para Status Operacional
-# This plot uses the 'filtered_df' (filtered by warranty and operational status only)
+# This plot uses the 'filtered_df' which now includes all applied filters
 if not filtered_df.empty:
     operational_counts = filtered_df['Status Operacional'].value_counts().reset_index()
     operational_counts.columns = ['Status', 'Quantidade']
@@ -177,7 +194,7 @@ if not filtered_df.empty:
     col4.plotly_chart(fig_operational)
 
 # Gerar e exibir gráfico de pizza para Status da Garantia
-# This plot uses the 'filtered_df' (filtered by warranty and operational status only)
+# This plot uses the 'filtered_df' which now includes all applied filters
 warranty_counts = filtered_df['Status da Garantia'].value_counts().reset_index()
 warranty_counts.columns = ['Status', 'Quantidade']
 fig_warranty = px.pie(
@@ -195,6 +212,7 @@ col6, col7 = st.columns(2)
 # --- Daily Generation Chart ---
 df_for_daily_chart = filtered_df.copy()
 # Apply faixa_geracao filter if 'Diário' is selected or 'Todos' is selected for periodo_geracao
+# Note: filtered_df is already filtered by the selected period/range, this is mostly for 'Todos' selection
 if selected_periodo_geracao == 'Diário' or selected_periodo_geracao == 'Todos':
     df_for_daily_chart = apply_generation_range_filter(df_for_daily_chart, 'Geração % diária', selected_faixa_geracao)
 
@@ -237,6 +255,7 @@ col6.plotly_chart(fig_daily)
 # --- Fortnightly Generation Chart ---
 df_for_fortnightly_chart = filtered_df.copy()
 # Apply faixa_geracao filter if 'Quinzenal' is selected or 'Todos' is selected for periodo_geracao
+# Note: filtered_df is already filtered by the selected period/range, this is mostly for 'Todos' selection
 if selected_periodo_geracao == 'Quinzenal' or selected_periodo_geracao == 'Todos':
     df_for_fortnightly_chart = apply_generation_range_filter(df_for_fortnightly_chart, 'Geração % quinzenal', selected_faixa_geracao)
 
@@ -279,6 +298,7 @@ col7.plotly_chart(fig_fortnightly)
 # --- Monthly Generation Chart ---
 df_for_monthly_chart = filtered_df.copy()
 # Apply faixa_geracao filter if 'Mensal' is selected or 'Todos' is selected for periodo_geracao
+# Note: filtered_df is already filtered by the selected period/range, this is mostly for 'Todos' selection
 if selected_periodo_geracao == 'Mensal' or selected_periodo_geracao == 'Todos':
     df_for_monthly_chart = apply_generation_range_filter(df_for_monthly_chart, 'Geração % mensal', selected_faixa_geracao)
 
@@ -323,6 +343,7 @@ col8.plotly_chart(fig_monthly)
 # --- Annual Generation Chart ---
 df_for_annual_chart = filtered_df.copy()
 # Apply faixa_geracao filter if 'Anual' is selected or 'Todos' is selected for periodo_geracao
+# Note: filtered_df is already filtered by the selected period/range, this is mostly for 'Todos' selection
 if selected_periodo_geracao == 'Anual' or selected_periodo_geracao == 'Todos':
     df_for_annual_chart = apply_generation_range_filter(df_for_annual_chart, 'Geração % anual', selected_faixa_geracao)
 
@@ -362,10 +383,11 @@ fig_annual = px.bar(
         )
 col9.plotly_chart(fig_annual)
 
-# Exibir os dados filtrados (This table reflects only warranty and operational filters)
+# Exibir os dados filtrados (This table now reflects warranty, operational, and if applicable, generation period/range filters)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)
+
 
 
 
