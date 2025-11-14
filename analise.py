@@ -78,6 +78,23 @@ if selected_periodo_geracao != 'Todos' and selected_faixa_geracao != 'Todos':
     }
     col_name = generation_col_map.get(selected_periodo_geracao)
 
+# NEW: Filtro por Faixa de Geração
+faixa_geracao_options = ['Todos', '> 90%', '80% < x <= 90%', '70% < x <= 80%', '60% < x <= 70%', '50% < x <= 60%', '< 45%']
+selected_faixa_geracao = st.sidebar.selectbox(
+    "Filtrar por Faixa de Geração",
+    faixa_geracao_options,
+    key='faixa_geracao_filter'
+)
+
+# Aplicar os filtros
+filtered_df = df.copy()
+
+if selected_warranty_status != 'Todos':
+    filtered_df = filtered_df[filtered_df['Status da Garantia'] == selected_warranty_status]
+
+if selected_operational_status != 'Todos':
+    filtered_df = filtered_df[filtered_df['Status Operacional'] == selected_operational_status]
+
 # Aplicar os filtros
 filtered_df = df.copy()
 
@@ -308,6 +325,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
