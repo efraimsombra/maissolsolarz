@@ -80,7 +80,7 @@ def apply_generation_range_filter(df_to_filter, generation_col, faixa_geracao):
     elif faixa_geracao == '< 45%':
         return df_filtered[df_filtered[generation_col] < 45]
     return df_filtered # Fallback, though one of the above should be hit if faixa_geracao is valid
-
+    
 # --- Barra Lateral (Filtros) ---
 st.sidebar.header("🔍 Filtros")
 
@@ -115,6 +115,8 @@ selected_operational_status = st.sidebar.selectbox(
     operational_options,
     key='operational_filter'
 )
+# Reset index to avoid potential indexing issues in subsequent operations
+filtered_df = filtered_df.reset_index(drop=True)
 
 # Aplicar os filtros
 filtered_df = df.copy()
@@ -371,6 +373,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
