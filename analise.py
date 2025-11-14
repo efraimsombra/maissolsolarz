@@ -73,32 +73,7 @@ selected_operational_status = st.sidebar.selectbox(
 # Aplicar os filtros
 filtered_df = df.copy()
 
-# --- Helper function for applying generation range filter ---
-def apply_generation_range_filter(df_to_filter, generation_col, faixa_geracao):
-    if faixa_geracao == 'Todos':
-        return df_to_filter
 
-    if generation_col not in df_to_filter.columns:
-        st.warning(f"Coluna '{generation_col}' não encontrada para o filtro de Faixa de Geração.")
-        return df_to_filter
-    
-    df_filtered = df_to_filter.copy()
-    df_filtered[generation_col] = pd.to_numeric(df_filtered[generation_col], errors='coerce')
-    df_filtered.dropna(subset=[generation_col], inplace=True) # Drop rows where conversion failed
-
-    if faixa_geracao == '> 90%':
-        return df_filtered[df_filtered[generation_col] > 90]
-    elif faixa_geracao == '80% < x <= 90%':
-        return df_filtered[(df_filtered[generation_col] > 80) & (df_filtered[generation_col] <= 90)]
-    elif faixa_geracao == '70% < x <= 80%':
-        return df_filtered[(df_filtered[generation_col] > 70) & (df_filtered[generation_col] <= 80)]
-    elif faixa_geracao == '60% < x <= 70%':
-        return df_filtered[(df_filtered[generation_col] > 60) & (df_filtered[generation_col] <= 70)]
-    elif faixa_geracao == '50% < x <= 60%':
-        return df_filtered[(df_filtered[generation_col] > 50) & (df_filtered[generation_col] <= 60)]
-    elif faixa_geracao == '< 45%':
-        return df_filtered[df_filtered[generation_col] < 45]
-    return df_to_filter # Should not be reached if faixa_geracao is one of the options
 
 if selected_warranty_status != 'Todos':
     filtered_df = filtered_df[filtered_df['Status da Garantia'] == selected_warranty_status]
@@ -350,6 +325,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
