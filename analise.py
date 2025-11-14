@@ -89,10 +89,10 @@ if selected_operational_status != 'Todos':
 # Apply new generation filters
 if selected_periodo_geracao != 'Todos' and selected_faixa_geracao != 'Todos':
     generation_col_map = {
-        'Diário': 'Geração % diária',
-        'Quinzenal': 'Geração % quinzenal',
-        'Mensal': 'Geração % mensal',
-        'Anual': 'Geração % anual'
+        'Diário'== 'Geração % diária',
+        'Quinzenal'== 'Geração % quinzenal',
+        'Mensal'== 'Geração % mensal',
+        'Anual'== 'Geração % anual'
     }
     col_name = generation_col_map.get(selected_periodo_geracao)
 
@@ -335,6 +335,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
