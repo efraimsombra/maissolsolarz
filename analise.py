@@ -77,14 +77,28 @@ if selected_warranty_status != 'Todos':
 if selected_operational_status != 'Todos':
     filtered_df = filtered_df[filtered_df['Status Operacional'] == selected_operational_status]
 
-# Aplicar os filtros
-filtered_df = df.copy()
+# Aplicar filtro por Período de Geração
+if selected_periodo_geracao != 'Todos':
+    # Assuming 'Período de Geração' is the column name in df
+    if 'Período de Geração' in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df['Período de Geração'] == selected_periodo_geracao]
 
-if selected_warranty_status != 'Todos':
-    filtered_df = filtered_df[filtered_df['Status da Garantia'] == selected_warranty_status]
-
-if selected_operational_status != 'Todos':
-    filtered_df = filtered_df[filtered_df['Status Operacional'] == selected_operational_status]
+# Aplicar filtro por Faixa de Geração
+if selected_faixa_geracao != 'Todos':
+    # Assuming 'Geração Percentual' is the column name in df and is numeric
+    if 'Geração Percentual' in filtered_df.columns:
+        if selected_faixa_geracao == '> 90%':
+            filtered_df = filtered_df[filtered_df['Geração Percentual'] > 90]
+        elif selected_faixa_geracao == '80% < x <= 90%':
+            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 80) & (filtered_df['Geração Percentual'] <= 90)]
+        elif selected_faixa_geracao == '70% < x <= 80%':
+            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 70) & (filtered_df['Geração Percentual'] <= 80)]
+        elif selected_faixa_geracao == '60% < x <= 70%':
+            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 60) & (filtered_df['Geração Percentual'] <= 70)]
+        elif selected_faixa_geracao == '50% < x <= 60%':
+            filtered_df = filtered_df[(filtered_df['Geração Percentual'] > 50) & (filtered_df['Geração Percentual'] <= 60)]
+        elif selected_faixa_geracao == '< 45%':
+            filtered_df = filtered_df[filtered_df['Geração Percentual'] < 45]
 
 # Reset index to avoid potential indexing issues in subsequent operations
 filtered_df = filtered_df.reset_index(drop=True)
@@ -307,6 +321,7 @@ col9.plotly_chart(fig_annual)
 st.subheader("Dados Filtrados")
 st.write(f"Total de Usinas: {filtered_df.shape[0]}")
 st.dataframe(filtered_df)    
+
 
 
 
